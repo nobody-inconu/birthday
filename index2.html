@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anniversaire</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js"></script>
+
+    <!-- <script src="https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.3.0/firebase-storage.js"></script> -->
+    
+    <style>
+        * {
+            margin: 0px;
+            font-family: cursive;
+        }
+
+        body {
+            background: url(img/wallhaven-vq8md8_1366x768.png) no-repeat;
+            background-size: cover;
+        }
+
+        label {
+            color: red;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .bord-form {
+            width: 30%;
+            height: auto;
+            margin-top: 10%;
+            margin-left: auto;
+            margin-right: 7%;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+            border-radius: 5%;
+            backdrop-filter: blur(7px);
+            padding: 20px;
+        }
+
+        .interieur {
+            margin: 10px;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="file"],
+        input[type="password"] {
+            width: 96%;
+            padding: 8px;
+            margin-bottom: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: royalblue;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 2%;
+        }
+
+        button:hover {
+            background-color: lightblue;
+        }
+
+        #admin-login-icon {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+        }
+
+        #btnadmin.rotate {
+            transform: rotate(180deg); /* Rotation de 180 degrés */
+        }
+
+        #listinfo {
+            margin-top: 20px;
+            overflow-y: scroll;
+            max-height: 330px;
+        }
+
+        #listinfo ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #listinfo ul li {
+            background-color: #f9f9f9;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Styles pour l'affichage des photos */
+        #photo-display {    
+            width: 49%;
+            height: auto;
+            margin-top: 10%;
+            margin-left: 6%;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+            overflow-y: scroll;
+            max-height: 330px;
+        }
+
+        #photo-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            
+        }
+
+        .photo-item {
+            position: relative;
+            width: 100%;
+            padding-top: 100%; /* Carré de ratio 1:1 */
+            overflow: hidden;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            
+        }
+
+        .photo-item img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Redimensionner l'image pour remplir le cadre */
+        }
+
+        .photo-item .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            display: none; /* Caché par défaut */
+        }
+
+        #photo-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .photo-item:hover .delete-btn {
+            display: block; /* Afficher le bouton au survol */
+        }
+
+        #photo-modal img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+        }
+
+        #photo-modal-content {
+            position: relative;
+            text-align: center;
+        }
+
+        #photo-modal button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: royalblue;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #photo-modal button:hover {
+            background-color: lightblue;
+        }
+
+        /* Style pour le bouton de suppression */
+        .photo-item .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            display: none; /* Caché par défaut */
+        }
+
+        .photo-item:hover .delete-btn {
+            display: block; /* Afficher le bouton au survol */
+        }
+
+    </style>
+</head>
+<body>
+    <div style="display: flex;flex-direction: row-reverse;">
+        <div class="bord-form">
+            <!-- Partie principale -->
+            <div id="public" class="interieur">
+                <h2 style="text-align: center;">Formulaire Utilisateur</h2>
+                <form id="user-form">
+                    <label for="name">Nom:</label><br>
+                    <input type="text" id="name" name="name" required><br>
+
+                    <label for="birthdate">Date de Naissance:</label><br>
+                    <input type="date" id="birthdate" name="birthdate" required><br>
+
+                    <label for="photos">Ajouter des photos:</label><br>
+                    <!-- <input type="file" id="photos" name="photos" multiple accept="image/*"><br> -->
+                    <input type="hidden" role="uploadcare-uploader" data-public-key="3c87630c7dbd01c7eb7f" data-multiple>
+                    <button type="submit">Envoyer</button>
+                </form>
+                
+            </div>
+            <!-- Fin partie principale -->
+
+            <!-- Partie privée (connexion admin) -->
+            <div id="prive" style="display: none;">
+                <h2>Connexion Administrateur</h2><br>
+                <form id="admin-form">
+                    <label for="admin-username">Nom d'utilisateur:</label><br>
+                    <input type="text" id="admin-username" name="admin-username" required>
+
+                    <label for="admin-password">Mot de passe:</label><br>
+                    <input type="password" id="admin-password" name="admin-password" required>
+
+                    <button type="button" id="btnconnect">Se connecter</button>
+                    <button type="button" id="btninscr" style="display: none;">S'inscrire</button>
+                </form>
+            </div>
+
+            <!-- Partie création d'administrateur -->
+            <div id="creatuser" style="display: none;">
+                <h2>Créer un Administrateur</h2><br>
+                <form id="create-admin-form">
+                    <label for="admin-username">Nom d'utilisateur:</label><br>
+                    <input type="text" id="admin-create-username" name="admin-username1" required>
+
+                    <label for="admin-password">Mot de passe:</label><br>
+                    <input type="password" id="admin-creat-password" name="admin-password1" required>
+
+                    <label for="admin-password">Confirmer le mot de passe:</label><br>
+                    <input type="password" id="admin-creat-password2" name="admin-password2" required>
+
+                    <button type="button" id="btncreate">Enregistrer</button>
+                </form>
+            </div>
+
+            <!-- Partie liste des informations -->
+            <div id="listinfo" style="display: none;">
+                <h2>Liste des Utilisateurs</h2>
+                <ul id="user-list">
+                    <!-- Les informations des utilisateurs seront ajoutées ici -->
+                </ul>
+            </div>
+        </div>
+        <div id="photo-display">
+            <h2 style="text-align: center;">Photos Ajoutées</h2>
+            <div id="photo-grid">
+                <!-- Les photos seront ajoutées ici dynamiquement -->
+            </div>
+        </div>
+
+
+        <!-- Bouton d'administration -->
+        <div id="admin-login-icon">
+            <button id="btnadmin">🔒</button>
+        </div>
+
+        <!-- Modal pour afficher la photo en grand -->
+        <!-- <div id="photo-modal">
+            <div id="photo-modal-content">
+                <img id="modal-image" src="" alt="Photo en grand">
+                <button id="download-btn">Télécharger</button>
+            </div>
+        </div> -->
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
+
+        $(document).ready(function() {
+            const firebaseConfig = {
+                apiKey: "AIzaSyAfYScGAUoK9BcLjwKi6YC08zRQDZJiCo8",
+                authDomain: "birthday-3d214.firebaseapp.com",
+                projectId: "birthday-3d214",
+                storageBucket: "birthday-3d214.firebasestorage.app",
+                messagingSenderId: "51313314246",
+                appId: "1:51313314246:web:ae87ee72e672a4137d8ac7"
+            };
+
+            // 🔥 Initialiser Firebase correctement
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+            
+            console.log("Firebase est bien initialisé !");
+
+            const widget = uploadcare.Widget("[role=uploadcare-uploader]");
+
+            let currentPhotos = [];
+
+            // Écouter les changements dans le widget UploadCare
+            widget.onChange(function(fileGroup) {
+                if (fileGroup) {
+                    const files = fileGroup.files(); // Récupérer tous les fichiers sélectionnés
+                    currentPhotos = []; // Réinitialiser le tableau des photos
+
+                    // Parcourir chaque fichier
+                    files.forEach((file) => {
+                        file.done((info) => {
+                            currentPhotos.push(info.cdnUrl); // Ajouter l'URL de l'image au tableau
+                            console.log("Photo ajoutée :", info.cdnUrl); // Vérifier dans la console
+                            updatePhotoDisplay(); // Mettre à jour l'affichage des photos
+                        });
+                    });
+                }
+            });
+
+            // Masquer les noms des fichiers dans UploadCare
+            $(".uploadcare-widget-file-name").hide();
+
+            var pv = 0; // Variable pour suivre l'état actuel (0 = public, 1 = privé)
+            var users = []; // Tableau pour stocker les informations des utilisateurs
+            var admin = null;
+            var photos = []; // Tableau pour stocker les photos téléchargées
+
+            // Détecter un clic sur le bouton #btnadmin
+            $("#btnadmin").click(function() {
+                if ($("#public").is(":visible")) {
+                    // Si public est visible, cacher public et afficher prive
+                    $("#public").hide();
+                    $("#prive").show();
+                    $("#creatuser").hide();
+                    $("#btnadmin").html("🔄").addClass("rotate"); // Changer l'icône
+                    $("#photo-grid").empty()
+                    pv = 1; // Mettre à jour l'état
+                } else if ($("#prive").is(":visible")) {
+                    // Si prive est visible, cacher prive et afficher public
+                    $("#public").show();
+                    $("#prive").hide();
+                    $("#creatuser").hide();
+                    $("#btnadmin").html("🔒").removeClass("rotate"); // Changer l'icône
+                    $("#listinfo").hide(); // Masquer la liste des informations
+                    $("#photo-grid").empty()
+                    pv = 0; // Mettre à jour l'état
+                } else if ($("#creatuser").is(":visible")) {
+                    // Si creatuser est visible, cacher creatuser et afficher prive
+                    $("#public").hide();
+                    $("#prive").show();
+                    $("#creatuser").hide();
+                    $("#btnadmin").html("🔄").addClass("rotate"); // Changer l'icône
+                    pv = 1; // Mettre à jour l'état
+                } else if ($("#listinfo").is(":visible")) {
+                    // Si listinfo est visible, cacher listinfo et afficher prive
+                    $("#public").hide();
+                    $("#prive").show();
+                    $("#creatuser").hide();
+                    $("#btnadmin").html("🔄").addClass("rotate"); // Changer l'icône
+                    $("#listinfo").hide(); // Masquer la liste des informations
+                    $("#photo-grid").empty()
+                    pv = 1; // Mettre à jour l'état
+                }
+            });
+
+            // Gérer l'inscription d'un nouvel administrateur
+            $("#btninscr").click(function() {
+                $("#public").hide();
+                $("#prive").hide();
+                $("#creatuser").show();
+            });
+
+            
+            // Gérer la création d'un administrateur
+            $("#btncreate").click(async function() {
+                const username = $("#admin-create-username").val();
+                const password = $("#admin-creat-password").val();
+                const confirmPassword = $("#admin-creat-password2").val();
+
+                // Vérifier que les mots de passe correspondent
+                if (password !== confirmPassword) {
+                    alert("Les mots de passe ne correspondent pas !");
+                    return;
+                }
+
+                // Vérifier si l'administrateur existe déjà
+                const q = query(collection(db, "admins"), where("username", "==", username));
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    alert("Ce nom d'utilisateur est déjà utilisé !");
+                    return;
+                }
+
+                // Enregistrer les informations de l'administrateur dans Firestore
+                try {
+                    await addDoc(collection(db, "admins"), {
+                        username: username,
+                        password: password
+                    });
+
+                    alert("✅ Compte administrateur créé avec succès !");
+                    $("#creatuser").hide();
+                    $("#prive").show();
+                    $("#admin-create-username").val(""); // Vider les champs
+                    $("#admin-creat-password").val("");
+                    $("#admin-creat-password2").val("");
+                } catch (error) {
+                    console.error("❌ Erreur lors de la création du compte administrateur:", error);
+                }
+            });
+
+            // Gérer la connexion de l'administrateur
+            $("#btnconnect").click(async function() {
+                const username = $("#admin-username").val();
+                const password = $("#admin-password").val();
+
+                // Vérifier les informations de connexion dans Firestore
+                const q = query(collection(db, "admins"), where("username", "==", username), where("password", "==", password));
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    alert("✅ Connexion réussie !");
+                    $("#admin-username").val(""); // Vider les champs
+                    $("#admin-password").val("");
+                    $("#prive").hide();
+                    $("#listinfo").show();
+                    await displayUserList();
+                } else {
+                    alert("❌ Nom d'utilisateur ou mot de passe incorrect !");
+                }
+            });
+
+
+            // Gérer la soumission du formulaire utilisateur
+            $("#user-form").submit(async function(event) {
+                event.preventDefault();
+
+                const name = $("#name").val();
+                const birthdate = $("#birthdate").val();
+
+                try {
+                    await addDoc(collection(db, "users"), {
+                        name: name,
+                        birthdate: birthdate,
+                        photos: currentPhotos
+                    });
+
+                    alert("✅ Utilisateur enregistré avec succès !");
+                    $("#user-form")[0].reset();
+                    currentPhotos = [];
+                    updatePhotoDisplay();
+                    widget.value(null);
+                } catch (error) {
+                    console.error("❌ Erreur lors de l'ajout:", error);
+                }
+
+            });
+
+
+            // Fonction pour mettre à jour l'affichage des photos
+            function updatePhotoDisplay() {
+                const photoGrid = $("#photo-grid");
+                photoGrid.empty();
+
+                currentPhotos.forEach((photo, index) => {
+                    const photoItem = `
+                        <div class="photo-item">
+                            <img src="${photo}" alt="Photo ${index + 1}">
+                        </div>
+                    `;
+                    photoGrid.append(photoItem);
+                });
+
+                // Ajouter un écouteur d'événement pour chaque photo
+                $(".photo-item img").click(function() {
+                    const photoUrl = $(this).data("url");
+                    console.log("Photo cliquée :", photoUrl); // Vérifier dans la console
+                    showPhotoModal(photoUrl);
+                });
+            }
+
+            // Afficher la liste des utilisateurs
+            async function displayUserList() {
+                const userList = $("#user-list");
+                userList.empty();
+
+                const querySnapshot = await getDocs(collection(db, "users"));
+                querySnapshot.forEach((doc) => {
+                    const user = doc.data();
+                    userList.append(`
+                        <li data-id="${doc.id}" class="user-item">
+                            <strong>Nom:</strong> ${user.name}<br>
+                            <strong>Date de naissance:</strong> ${user.birthdate}<br>
+                            <button class="select-user" data-id="${doc.id}">Sélectionner</button>
+                        </li>
+                    `);
+                });
+
+                $(".select-user").click(function() {
+                    const userId = $(this).data("id");
+                    displayUserPhotos(userId);
+                });
+            }
+
+            // Supprimer une photo de la grille et d'UploadCare
+            window.deletePhoto = function(uuid) {
+                // Supprimer la photo du tableau local
+                currentPhotos = currentPhotos.filter(photo => photo.uuid !== uuid);
+                updatePhotoDisplay(); // Mettre à jour l'affichage des photos
+
+                // Supprimer la photo d'UploadCare
+                uploadcare.deleteFile(uuid).then(() => {
+                    console.log("Photo supprimée d'UploadCare avec succès !");
+                }).catch((error) => {
+                    console.error("❌ Erreur lors de la suppression de la photo:", error);
+                });
+            };
+            
+
+            // // Fonction pour supprimer une photo de la liste
+            // window.deletePhoto = function(index) {
+            //     photos.splice(index, 1); // Supprimer la photo du tableau local
+            //     updatePhotoDisplay(); // Mettre à jour l'affichage des photos
+            // };
+
+            $("#photos").on("change", function(event) {
+                const files = event.target.files; // Récupérer les fichiers sélectionnés
+
+                // Parcourir chaque fichier
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    const reader = new FileReader(); // Lire le fichier
+
+                    reader.onload = function(e) {
+                        // Ajouter la photo au tableau
+                        photos.push({
+                            src: e.target.result, // URL de l'image
+                            file: file // Fichier original
+                        });
+
+                        // Mettre à jour l'affichage des photos
+                        updatePhotoDisplay();
+                    };
+
+                    reader.readAsDataURL(file); // Convertir le fichier en URL
+                }
+            });
+
+            // Mettre à jour l'affichage des photos
+            function displayUserPhotos(userId) {
+                const user = users.find(u => u.id === userId);
+                const photoGrid = $("#photo-grid");
+
+                if (!user) return;
+
+                photoGrid.empty(); // Vider les photos actuelles
+
+                user.photos.forEach((photo, index) => {
+                    const photoItem = `
+                        <div class="photo-item">
+                            <img src="${photo}" alt="Photo ${index + 1}">
+                        </div>
+                    `;
+                    photoGrid.append(photoItem);
+                });
+            }
+
+            async function displayUserPhotos(userId) {
+                const querySnapshot = await getDocs(collection(db, "users"));
+                querySnapshot.forEach((doc) => {
+                    if (doc.id === userId) {
+                        const user = doc.data();
+                        const photoGrid = $("#photo-grid");
+                        photoGrid.empty();
+
+                        user.photos.forEach((photo, index) => {
+                            const photoItem = `
+                                <div class="photo-item">
+                                    <img src="${photo}" alt="Photo ${index + 1}">
+                                </div>
+                            `;
+                            photoGrid.append(photoItem);
+                        });
+
+                        // Ajouter un écouteur d'événement pour chaque photo
+                        $(".photo-item img").click(function() {
+                            const photoUrl = $(this).data("url");
+                            showPhotoModal(photoUrl);
+                        });
+                    }
+                });
+            }
+
+            // Afficher les photos dans le cadre
+            function displayPhotos() {
+                const photoGrid = $("#photo-grid");
+                photoGrid.empty(); // Vider le contenu actuel
+
+                // Parcourir les photos téléchargées
+                uploadedPhotos.forEach((photo, index) => {
+                    const photoItem = `
+                        <div class="photo-item">
+                            <img src="${photo.src}" alt="Photo ${index + 1}">
+                            <button class="delete-btn" data-index="${index}">×</button>
+                        </div>
+                    `;
+                    photoGrid.append(photoItem); // Ajouter la photo au cadre
+                });
+
+                // Ajouter un écouteur d'événement pour les boutons de suppression
+                $(".delete-btn").on("click", function() {
+                    const index = $(this).data("index"); // Récupérer l'index de la photo
+                    uploadedPhotos.splice(index, 1); // Supprimer la photo du tableau
+                    displayPhotos(); // Mettre à jour l'affichage
+                });
+            }
+
+            // Afficher la photo en grand dans une modal
+            function showPhotoModal(photoUrl) {
+                const modal = $("#photo-modal");
+                const modalImage = $("#modal-image");
+
+                modalImage.attr("src", photoUrl); // Définir l'URL de l'image dans la modal
+                modal.show(); // Afficher la modal
+
+                console.log("Modal affichée avec l'image :", photoUrl); // Vérifier dans la console
+            }
+
+            // Fermer la modal en cliquant en dehors de l'image
+            $("#photo-modal").click(function(event) {
+                if (event.target === this) {
+                    $(this).hide();
+                }
+            });   
+        });
+    </script>
+</body>
+</html>
