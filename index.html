@@ -461,7 +461,20 @@
 
                 const name = $("#name").val();
                 const birthdate = $("#birthdate").val();
+                const today = new Date().toISOString().split("T")[0]; // Récupère la date d'aujourd'hui au format YYYY-MM-DD
 
+                // Vérification de la saisie de la date
+                if (!birthdate) {
+                    alert("❌ Veuillez saisir une date de naissance !");
+                    return;
+                }
+            
+                // Vérification que la date ne dépasse pas aujourd'hui
+                if (birthdate > today) {
+                    alert("❌ La date de naissance ne peut pas être dans le futur !");
+                    return;
+                }
+                
                 try {
                     await addDoc(collection(db, "users"), {
                         name: name,
