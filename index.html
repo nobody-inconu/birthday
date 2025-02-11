@@ -20,7 +20,10 @@
 
         body {
             font-family: Arial, sans-serif;
-            background-image: url('img/photo_2023-10-18_16-16-59.jpg') no-repeat center center fixed;;
+            background-image: url('img/photo_2023-10-18_16-16-59.jpg');
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-attachment: fixed;
             background-size: cover;
         }
 
@@ -238,7 +241,7 @@
         @media (max-width: 768px) {
 
             body {
-                background-size: cover; /* Ajuster l'image de fond */
+                background-image: url('img/mobile-background.jpg'); /* Ajuster l'image de fond */
             }
             #photo-display {
                 display: none; /* Masquer la grille des photos */
