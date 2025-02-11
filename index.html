@@ -16,9 +16,11 @@
             margin: 0px;
             font-family: Verdana;
         }
+        
 
         body {
-            background: url(img/wallhaven-vq8md8_1366x768.png) no-repeat;
+            font-family: Arial, sans-serif;
+            background-image: url('default-background.jpg');
             background-size: cover;
         }
 
@@ -153,24 +155,40 @@
         }
 
         #photo-modal {
-            display: none;
+            display: none; /* Masquée par défaut */
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
+            background-color: rgba(0, 0, 0, 0.9); /* Fond sombre */
+            z-index: 1000; /* Au-dessus de tout */
             justify-content: center;
             align-items: center;
-            z-index: 1000;
         }
 
-        .photo-item:hover .delete-btn {
-            display: block; /* Afficher le bouton au survol */
+        #modal-image {
+            max-width: 47%;
+            max-height: 47%;
+            border-radius: 10px;
+        }
+
+        #close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
         }
 
         #photo-modal img {
-            max-width: 90%;
+            max-width: 38%;
             max-height: 90%;
             border-radius: 10px;
         }
@@ -213,10 +231,79 @@
             display: block; /* Afficher le bouton au survol */
         }
 
+        #show-photos-button {
+            display: none; 
+        }
+
+        @media (max-width: 768px) {
+
+            body {
+                background-size: cover; /* Ajuster l'image de fond */
+            }
+            #photo-display {
+                display: none; /* Masquer la grille des photos */
+            }
+            
+            .bord-form {
+                width: 90%;
+                height: auto;
+                margin-top: 20%;
+                margin-left: auto;
+                margin-right: auto;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+                border-radius: 5%;
+                backdrop-filter: blur(7px);
+                padding: 20px;
+            }
+            
+            #photo-modal button {
+                margin-top: 16%;
+                padding: 10px 20px;
+                background-color: royalblue;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+            }
+
+            /* Afficher un bouton pour ouvrir la popup */
+            #show-photos-button {
+                display: block; /* Afficher le bouton */
+                margin: 0; /* Centrer le bouton */
+                padding: 10px 20px;
+                background-color: royalblue;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                margin-top: 2%;
+            }
+
+            #modal-image {
+                max-width: 100%; /* Prendre toute la largeur sur mobile */
+                max-height: 80vh; /* Limiter la hauteur pour éviter de dépasser */
+            }
+
+            #photo-modal img {
+                max-width: 96%;
+                max-height: 90%;
+                border-radius: 10px;
+                margin-top: 20%;
+            }
+
+            #close-modal {
+                top: 10px;
+                right: 10px;
+                width: 30px;
+                height: 30px;
+                font-size: 16px;
+            }
+        }
     </style>
 </head>
 <body>
     <div style="display: flex;flex-direction: row-reverse;">
+        
         <div class="bord-form">
             <!-- Partie principale -->
             <div id="public" class="interieur">
@@ -229,8 +316,10 @@
                     <input type="date" id="birthdate" name="birthdate" required><br>
 
                     <label for="photos">Ajouter des photos:</label><br>
+                    
                     <!-- <input type="file" id="photos" name="photos" multiple accept="image/*"><br> -->
-                    <input type="hidden" name="image" role="uploadcare-uploader" data-tabs="file camera gdrive" data-public-key="3c87630c7dbd01c7eb7f" data-multiple>
+                    <input type="hidden" name="image" role="uploadcare-uploader" data-tabs="file camera gdrive" data-public-key="3c87630c7dbd01c7eb7f" data-multiple><br>
+                    <button id="show-photos-button">voir Photos</button>
                     <button type="submit">Envoyer</button>
                 </form>
                 
@@ -290,6 +379,42 @@
             <button id="btnadmin">🔒</button>
         </div>
 
+        <div id="settings-icon" style="position: fixed; top: 20px; right: 100px; cursor: pointer; font-size: 30px;">
+            ⚙️
+        </div>
+        <!-- <button id="btnlogout" style="display: none;">Déconnexion</button> -->
+        <!-- Popup pour afficher les photos -->
+        <div id="photo-popup" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9); z-index: 1000; overflow-y: auto;">
+            <div style="position: relative; padding: 20px; background-color: white; margin: 10% auto; width: 90%; max-width: 600px; border-radius: 10px;">
+                <h2 style="text-align: center;">Photos Ajoutées</h2>
+                <div id="photo-popup-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                    <!-- Les photos seront ajoutées ici dynamiquement -->
+                </div>
+                <button id="close-photo-popup" style="display: block; margin: 20px auto; padding: 10px 20px; background-color: red; color: white; border: none; border-radius: 5px; cursor: pointer;">Fermer</button>
+            </div>
+        </div>
+
+        <!-- Modal pour afficher la photo en grand -->
+        <div id="photo-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9); z-index: 1000; justify-content: center; align-items: center;">
+            <div style="position: relative; text-align: center;">
+                <img id="modal-image" src="" alt="Photo en grand" >
+                <button id="close-modal" style="position: absolute; top: 20px; right: 20px; background-color: red; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer;">×</button>
+            </div>
+        </div>
+
+        <div id="settings-panel" style="display: none; position: fixed; top: 60px; right: 20px; background-color: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); z-index: 1000;">
+            <h3>Paramètres</h3>
+            <label for="background-image">Image de fond:</label>
+            <input type="file" id="background-image" accept="image/*"><br><br>
+            <label for="font-family">Police:</label>
+            <select id="font-family">
+                <option value="Arial">Arial</option>
+                <option value="Verdana">Verdana</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Courier New">Courier New</option>
+            </select>
+        </div>
+        
         <!-- Modal pour afficher la photo en grand -->
         <!-- <div id="photo-modal">
             <div id="photo-modal-content">
@@ -321,6 +446,24 @@
 
             const widget = uploadcare.Widget("[role=uploadcare-uploader]");
 
+            const savedBackground = localStorage.getItem("backgroundImage");
+            if (savedBackground) {
+                $("body").css("background-image", `url(${savedBackground})`);
+            }
+            $("#settings-icon").hide()
+            const savedFont = localStorage.getItem("fontFamily");
+            if (savedFont) {
+                $("body").css("font-family", savedFont);
+                $("#font-family").val(savedFont);
+            }
+
+            //garde la sesion ouvert
+            // if (localStorage.getItem("adminLoggedIn") === "true") {
+            //     $("#prive").hide();
+            //     $("#listinfo").show();
+            //     displayUserList();
+            // }
+
             let currentPhotos = [];
 
             // Écouter les changements dans le widget UploadCare
@@ -339,6 +482,95 @@
                     });
                 }
             });
+
+            //nouveau 
+            // Afficher la popup des photos
+            $("#show-photos-button").click(function() {
+                // Copier les photos de la grille principale vers la popup
+                const photoGrid = $("#photo-grid").html();
+                $("#photo-popup-grid").html(photoGrid);
+
+                // Afficher la popup
+                $("#photo-popup").show();
+            });
+
+            // Fermer la popup des photos
+            $("#close-photo-popup").click(function() {
+                $("#photo-popup").hide();
+            });
+
+            $("#settings-icon").click(function() {
+                $("#settings-panel").toggle(); // Afficher/masquer le panneau
+            });
+
+            $("#font-family").on("change", function() {
+                const font = $(this).val();
+                $("body").css("font-family", font);
+                localStorage.setItem("fontFamily", font); // Sauvegarder la police
+            });
+
+            $("#background-image").on("change", function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $("body").css("background-image", `url(${e.target.result})`);
+                        localStorage.setItem("backgroundImage", e.target.result); // Sauvegarder l'image
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            $("#btnlogout").click(function() {
+                localStorage.removeItem("adminLoggedIn"); // Supprimer l'état de connexion
+                location.reload(); // Recharger la page
+            });
+
+            // Fonction pour détecter si l'utilisateur est sur un appareil mobile
+            function isMobile() {
+                return window.matchMedia("(max-width: 768px)").matches;
+            }
+
+            // Afficher les photos de l'utilisateur sélectionné
+            $(document).on("click", ".select-user", async function() {
+                const userId = $(this).data("id");
+
+                if (isMobile()) {
+                    // Mode mobile : afficher les photos dans une popup
+                    await displayUserPhotos(userId); // Charger les photos
+                    $("#photo-popup").show(); // Afficher la popup
+                } else {
+                    // Mode desktop : afficher les photos dans la grille principale
+                    await displayUserPhotos(userId);
+                }
+            });
+            
+            // Fermer la popup en cliquant en dehors de la zone de contenu
+            $("#photo-popup").click(function(event) {
+                if (event.target === this) {
+                    $("#photo-popup").hide();
+                }
+            });
+
+            $(document).on("click", ".photo-item img", function() {
+                const photoUrl = $(this).attr("src"); // Récupérer l'URL de la photo cliquée
+                $("#modal-image").attr("src", photoUrl); // Définir l'image dans la modal
+                $("#photo-modal").show(); // Afficher la modal
+            });
+
+            // Fermer la modal lorsqu'on clique sur le bouton de fermeture
+            $("#close-modal").click(function() {
+                $("#photo-modal").hide();
+            });
+
+            // Fermer la modal lorsqu'on clique en dehors de l'image
+            $("#photo-modal").click(function(event) {
+                if (event.target === this) {
+                    $("#photo-modal").hide();
+                }
+            });
+
+            //nouveau 
 
             // Masquer les noms des fichiers dans UploadCare
             $(".uploadcare-widget-file-name").hide();
@@ -382,6 +614,7 @@
                     $("#btnadmin").html("🔄").addClass("rotate"); // Changer l'icône
                     $("#listinfo").hide(); // Masquer la liste des informations
                     $("#photo-grid").empty()
+                    $("#settings-icon").hide()
                     pv = 1; // Mettre à jour l'état
                 }
             });
@@ -446,8 +679,10 @@
                     alert("✅ Connexion réussie !");
                     $("#admin-username").val(""); // Vider les champs
                     $("#admin-password").val("");
+                    //localStorage.setItem("adminLoggedIn", "true"); // Stocker l'état de connexion
                     $("#prive").hide();
                     $("#listinfo").show();
+                    $("#settings-icon").show()
                     await displayUserList();
                 } else {
                     alert("❌ Nom d'utilisateur ou mot de passe incorrect !");
@@ -497,7 +732,9 @@
             // Fonction pour mettre à jour l'affichage des photos
             function updatePhotoDisplay() {
                 const photoGrid = $("#photo-grid");
+                const photoPopupGrid = $("#photo-popup-grid");
                 photoGrid.empty();
+                photoPopupGrid.empty();
 
                 currentPhotos.forEach((photo, index) => {
                     const photoItem = `
@@ -506,6 +743,7 @@
                         </div>
                     `;
                     photoGrid.append(photoItem);
+                    photoPopupGrid.append(photoItem);
                 });
 
                 // Ajouter un écouteur d'événement pour chaque photo
@@ -607,7 +845,7 @@
                 querySnapshot.forEach((doc) => {
                     if (doc.id === userId) {
                         const user = doc.data();
-                        const photoGrid = $("#photo-grid");
+                        const photoGrid = isMobile() ? $("#photo-popup-grid") : $("#photo-grid");
                         photoGrid.empty();
 
                         user.photos.forEach((photo, index) => {
@@ -621,7 +859,7 @@
 
                         // Ajouter un écouteur d'événement pour chaque photo
                         $(".photo-item img").click(function() {
-                            const photoUrl = $(this).data("url");
+                            const photoUrl = $(this).attr("src");
                             showPhotoModal(photoUrl);
                         });
                     }
