@@ -238,6 +238,20 @@
             display: none; 
         }
 
+        .delete-user {
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 25px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .delete-user:hover {
+            background-color: darkred;
+        }
+
         @media (max-width: 768px) {
 
             body {
@@ -433,7 +447,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, query, where, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
 
         $(document).ready(function() {
             const firebaseConfig = {
@@ -761,6 +775,17 @@
                 });
             }
 
+            // Fonction pour supprimer un utilisateur
+            async function deleteUser(userId) {
+                try {
+                    await deleteDoc(doc(db, "users", userId));
+                    alert("✅ Utilisateur supprimé avec succès !");
+                } catch (error) {
+                    console.error("❌ Erreur lors de la suppression de l'utilisateur:", error);
+                    alert("❌ Erreur lors de la suppression de l'utilisateur.");
+                }
+            }
+
             // Afficher la liste des utilisateurs
             async function displayUserList() {
                 const userList = $("#user-list");
@@ -775,6 +800,7 @@
                             <strong>Date de naissance:</strong> ${user.birthdate}<br>
                             <strong>Nombre de photo : </strong> ${user.photos.length}<strong> Photo(s)</strong><br>
                             <button class="select-user" data-id="${doc.id}">Sélectionner</button>
+                            <button class="delete-user" data-id="${doc.id}">Supprimer</button>
                         </li>
                     `);
                 });
@@ -782,6 +808,15 @@
                 $(".select-user").click(function() {
                     const userId = $(this).data("id");
                     displayUserPhotos(userId);
+                });
+
+                // Ajouter un écouteur d'événement pour le bouton "Supprimer"
+                $(".delete-user").click(async function() {
+                    const userId = $(this).data("id");
+                    if (confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?")) {
+                        await deleteUser(userId);
+                        await displayUserList(); // Rafraîchir la liste après suppression
+                    }
                 });
             }
 
